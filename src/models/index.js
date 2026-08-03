@@ -35,6 +35,7 @@ db.Favorite = require('./Favorite')(sequelize);
 db.OrderItem = require('./OrderItem')(sequelize);
 db.Payment = require('./Payment')(sequelize);
 db.Review = require('./Review')(sequelize);
+db.Session = require('./Session')(sequelize);
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {

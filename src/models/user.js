@@ -39,6 +39,12 @@ module.exports = (sequelize) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
+      User.hasMany(models.Session, {
+        foreignKey: 'user_id',
+        as: 'sessions',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      });
       User.belongsToMany(models.Item, { // many to many relationship with items for favorites table
         through: models.Favorite,
         foreignKey: 'user_id',
