@@ -8,12 +8,37 @@ async function getAll() {
   return Review.findAll();
 }
 
+async function approveReview(id) {
+  return Review.update({ is_approved: true }, { where: { id: id } });
+}
+
+async function rejectReview(id) {
+  return Review.update({ is_approved: false }, { where: { id: id } });
+}
+
 async function findById(id) {
   return Review.findByPk(id);
 }
 
 async function deleteById(id) {
   return Review.destroy({ where: { id } });
+}
+
+async function getReviewByDetails(id) {
+  return Review.findOne({
+    where: {
+      id: id,
+    },
+    include: [
+      {
+        model: User,
+      },
+      {
+        model: Item,
+        as: 'item',
+      },
+    ],
+  });
 }
 
 async function updateById(id, updateData) {

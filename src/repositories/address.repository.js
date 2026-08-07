@@ -35,6 +35,12 @@ async function deleteByUserAndId(userId, addressId) {
     },
   });
 }
+async function checkLimitation(userId) {
+  const addresses = await Address.findAll({
+    where: { user_id: userId },
+  });
+  return addresses.length < 3;
+}
 
 module.exports = {
   create,

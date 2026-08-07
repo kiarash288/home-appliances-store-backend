@@ -87,6 +87,15 @@ module.exports = (sequelize) => {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
       },
+      main_image: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      gallery: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+      },
     },
     {
       sequelize,
