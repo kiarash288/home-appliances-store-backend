@@ -19,6 +19,7 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
     "mysql2": "^3.23.0",
+    "redis": "^6.1.0",
     "sequelize": "^6.37.8",
     "zod": "^4.4.3"
   },

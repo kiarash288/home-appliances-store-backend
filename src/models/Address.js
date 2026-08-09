@@ -4,13 +4,13 @@ module.exports = (sequelize) => {
   class Address extends Model {
     static associate(models) {
       Address.belongsTo(models.User, {
-        foreignKey: 'user_id',
+        foreignKey: 'userId',
         as: 'user',
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
       Address.hasMany(models.Order, {
-        foreignKey: 'address_id',
+        foreignKey: 'addressId',
         as: 'orders',
         onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
@@ -25,7 +25,7 @@ module.exports = (sequelize) => {
         autoIncrement: true,
         primaryKey: true,
       },
-      user_id: {
+      userId: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
       },
@@ -37,19 +37,24 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
-      postal_code: {
+      state: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      postalCode: {
         type: DataTypes.STRING(20),
         allowNull: false,
       },
-      full_address: {
+      fullAddress: {
         type: DataTypes.TEXT,
         allowNull: false,
       },
-      phone_number: {
+      phone: {
         type: DataTypes.STRING(30),
         allowNull: false,
+        field: 'phone_number',
       },
-      is_default: {
+      isDefault: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,

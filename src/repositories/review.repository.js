@@ -51,11 +51,12 @@ async function updateById(id, updateData) {
 
 async function getItemReviews(itemId) {
   return Review.findAll({
-    where: { item_id: itemId },
+    where: { item_id: itemId, is_approved: true },
     include: [
       {
         model: User,
         as: 'user',
+        attributes: ['id', 'first_name', 'last_name'],
       },
     ],
   });
@@ -107,9 +108,15 @@ async function checkIfUserReviewedItem(userId, itemId) {
 module.exports = {
   create,
   getAll,
+  findById,
+  deleteById,
   getItemReviews,
   getUserReviews,
   updateByUserAndReviewId,
   deleteByUserAndReviewId,
   checkIfUserReviewedItem,
+  approveReview,
+  rejectReview,
+  getReviewByDetails,
+  updateById,
 };

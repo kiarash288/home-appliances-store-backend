@@ -5,6 +5,10 @@ async function create(itemData) {
   return Item.create(itemData);
 }
 
+async function findById(id) {
+  return Item.findByPk(id);
+}
+
 async function getAll(queryFilters = {}) {
   const where = {};
 
@@ -118,6 +122,7 @@ async function increaseStock(id, quantity) {
 
 module.exports = {
   create,
+  findById,
   getAll,
   findByIdWithDetails,
   updateById,

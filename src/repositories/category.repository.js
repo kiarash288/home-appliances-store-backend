@@ -8,6 +8,10 @@ async function findById(id) {
   return Category.findByPk(id);
 }
 
+async function findByName(name) {
+  return Category.findOne({ where: { name } });
+}
+
 async function getAll() {
   return Category.findAll();
 }
@@ -38,6 +42,7 @@ async function getCategoryWithItems(id) {
 module.exports = {
   create,
   findById,
+  findByName,
   getAll,
   updateById,
   deleteById,

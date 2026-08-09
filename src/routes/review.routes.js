@@ -1,26 +1,78 @@
 const express = require('express');
 const router = express.Router();
 
+const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
+const validate = require('../middlewares/validate.middleware');
+const { validateParams } = require('../middlewares/validate.middleware');
+const {
+  itemIdParamSchema,
+  reviewIdParamSchema,
+  idParamSchema,
+} = require('../validators/common.validator');
+const {
+  createReviewSchema,
+  updateReviewSchema,
+  updateReviewStatusSchema,
+} = require('../validators/review.validator');
+const reviewController = require('../controllers/review.controller');
+
 // ==================== Public Routes ====================
 // No authentication required
 
-router.get('/item/:itemId', (req, res) => {}); // Get all approved reviews for an item
+router.get(
+  '/item/:itemId',
+  validateParams(itemIdParamSchema),
+  reviewController.getProductReviews
+); // Get all approved reviews for an item
 
 // ==================== Customer/User Routes ====================
-// TODO: add verifyToken middleware
 
-router.post('/item/:itemId', (req, res) => {}); // Create a new review for an item
-router.get('/my-reviews', (req, res) => {}); // Get reviews written by logged-in user
-router.put('/:id', (req, res) => {}); // Update own review
-router.delete('/:id', (req, res) => {}); // Delete own review
-// router.post('/:id/helpful', (req, res) => {}); // Vote review as helpful
+router.post(
+  '/item/:itemId',
+  verifyToken,
+  validateParams(itemIdParamSchema),
+  validate(createReviewSchema),
+  reviewController.createReview
+); // Create a new review for an item
+router.get('/my-reviews', verifyToken, (req, res) => {}); // Get reviews written by logged-in user
+router.put(
+  '/:reviewId',
+  verifyToken,
+  validateParams(reviewIdParamSchema),
+  validate(updateReviewSchema),
+  (req, res) => {}
+); // Update own review
+router.delete(
+  '/:reviewId',
+  verifyToken,
+  validateParams(reviewIdParamSchema),
+  reviewController.deleteReview
+); // Delete own review
 
 // ==================== Admin Routes ====================
-// TODO: add verifyToken, isAdmin middlewares
 
-router.get('/', (req, res) => {}); // Get all reviews (filter by status via query)
-router.get('/:id', (req, res) => {}); // Get review details by ID
-router.put('/:id/status', (req, res) => {}); // Approve or reject a review
-router.delete('/admin/:id', (req, res) => {}); // Force delete any review
+router.get('/', verifyToken, isAdmin, (req, res) => {}); // Get all reviews (filter by status via query)
+router.get(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  (req, res) => {}
+); // Get review details by ID
+router.put(
+  '/:id/status',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  validate(updateReviewStatusSchema),
+  (req, res) => {}
+); // Approve or reject a review
+router.delete(
+  '/admin/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  (req, res) => {}
+); // Force delete any review
 
 module.exports = router;

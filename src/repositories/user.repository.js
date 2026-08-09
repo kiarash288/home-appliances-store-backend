@@ -29,12 +29,15 @@ async function findByEmail(email) {
   return User.findOne({ where: { email } });
 }
 
-
+async function findByPhone(phone) {
+  return User.findOne({ where: { phone } });
+}
 
 module.exports = {
   create,
   findById,
   findByEmail,
+  findByPhone,
   getAll,
   updateById,
   deleteById,

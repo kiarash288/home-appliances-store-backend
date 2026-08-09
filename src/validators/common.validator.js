@@ -11,8 +11,8 @@ const { z } = require('zod');
 // Exactly 10 digits (Iranian postal code)
 const POSTAL_CODE_REGEX = /^\d{10}$/;
 
-// Iranian mobile number: 09 followed by 9 digits
-const MOBILE_REGEX = /^09\d{11}$/;
+// Iranian mobile number: 09 followed by 9 digits (11 digits total)
+const MOBILE_REGEX = /^09\d{9}$/;
 
 // At least one lower case letter, one upper case letter and one digit
 const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
@@ -108,6 +108,57 @@ const requireAtLeastOneField = (schema) =>
     error: 'At least one field must be provided',
   });
 
+/**
+ * 5-digit numeric OTP code (kept as string).
+ */
+const otpCodeField = stringField('Verification code')
+  .length(5, { message: 'Verification code must be exactly 5 digits' })
+  .regex(/^\d+$/, { message: 'Verification code must contain only numbers' });
+
+/**
+ * Normalized email address.
+ */
+const emailField = stringField('Email')
+  .toLowerCase()
+  .email({ message: 'Please provide a valid email address' });
+
+/**
+ * Iranian mobile number (kept as string to preserve leading zeros).
+ */
+const phoneField = stringField('Phone number').regex(MOBILE_REGEX, {
+  message: 'Phone number must start with 09 and contain exactly 11 digits',
+});
+
+const verifyOtpSchema = z
+  .object({
+    otp: otpCodeField,
+  })
+  .strict();
+
+const idParamSchema = z
+  .object({
+    id: idField('ID'),
+  })
+  .strict();
+
+const productIdParamSchema = z
+  .object({
+    productId: idField('Product ID'),
+  })
+  .strict();
+
+const itemIdParamSchema = z
+  .object({
+    itemId: idField('Item ID'),
+  })
+  .strict();
+
+const reviewIdParamSchema = z
+  .object({
+    reviewId: idField('Review ID'),
+  })
+  .strict();
+
 module.exports = {
   POSTAL_CODE_REGEX,
   MOBILE_REGEX,
@@ -118,4 +169,12 @@ module.exports = {
   idField,
   priceField,
   requireAtLeastOneField,
+  otpCodeField,
+  emailField,
+  phoneField,
+  verifyOtpSchema,
+  idParamSchema,
+  productIdParamSchema,
+  itemIdParamSchema,
+  reviewIdParamSchema,
 };

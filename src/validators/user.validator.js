@@ -3,6 +3,9 @@ const {
   stringField,
   passwordField,
   requireAtLeastOneField,
+  otpCodeField,
+  emailField,
+  phoneField,
 } = require('./common.validator');
 
 /**
@@ -28,16 +31,43 @@ const changePasswordSchema = z
   })
   .strict();
 
+const requestPasswordResetSchema = z
+  .object({
+    email: emailField,
+  })
+  .strict();
+
+const verifyPasswordResetSchema = z
+  .object({
+    email: emailField,
+    otp: otpCodeField,
+    newPassword: passwordField('New password'),
+  })
+  .strict();
+
 const changeEmailRequestSchema = z
   .object({
-    email: z
-      .string({
-        error: (issue) =>
-          issue.input === undefined ? 'Email is required' : 'Email must be a string',
-      })
-      .trim()
-      .toLowerCase()
-      .email({ error: 'Please provide a valid email address' }),
+    email: emailField,
+  })
+  .strict();
+
+const verifyChangeEmailSchema = z
+  .object({
+    email: emailField,
+    otp: otpCodeField,
+  })
+  .strict();
+
+const requestChangePhoneSchema = z
+  .object({
+    phone: phoneField,
+  })
+  .strict();
+
+const verifyChangePhoneSchema = z
+  .object({
+    phone: phoneField,
+    otp: otpCodeField,
   })
   .strict();
 
@@ -51,6 +81,11 @@ const updateUserRoleSchema = z
 module.exports = {
   updateProfileSchema,
   changePasswordSchema,
+  requestPasswordResetSchema,
+  verifyPasswordResetSchema,
   changeEmailRequestSchema,
+  verifyChangeEmailSchema,
+  requestChangePhoneSchema,
+  verifyChangePhoneSchema,
   updateUserRoleSchema,
 };

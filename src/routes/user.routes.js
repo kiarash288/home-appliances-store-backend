@@ -1,27 +1,112 @@
 const express = require('express');
 const router = express.Router();
 
-// ==================== Customer Routes ====================
-// TODO: add verifyToken middleware
+const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
+const validate = require('../middlewares/validate.middleware');
+const { validateParams } = require('../middlewares/validate.middleware');
+const { idParamSchema } = require('../validators/common.validator');
+const {
+  updateProfileSchema,
+  changePasswordSchema,
+  requestPasswordResetSchema,
+  verifyPasswordResetSchema,
+  changeEmailRequestSchema,
+  verifyChangeEmailSchema,
+  requestChangePhoneSchema,
+  verifyChangePhoneSchema,
+  updateUserRoleSchema,
+} = require('../validators/user.validator');
+const userController = require('../controllers/user.controller');
 
-router.get('/profile', (req, res) => {}); // Get logged-in user's profile
-router.put('/profile', (req, res) => {}); // Update logged-in user's profile
-router.put('/change-password', (req, res) => {}); // Change logged-in user's password
-router.put('/change-password/verify', (req, res) => {}); // Confirm new password
-router.post('/change-email/request', (req, res) => {}); // Request email change (OTP/link)
-router.put('/change-email/verify', (req, res) => {}); // Verify OTP and update email
-router.post('/change-phone/request', (req, res) => {}); // Request phone change (SMS OTP)
-router.put('/change-phone/verify', (req, res) => {}); // Verify SMS OTP and update phone
-router.get('/favorites', (req, res) => {}); // Get logged-in user's favorites
-// router.get('/sessions', (req, res) => {}); // Get active sessions for logged-in user
+// ==================== Customer Routes ====================
+
+router.get('/profile', verifyToken, userController.getProfile); // Get logged-in user's profile
+router.put(
+  '/profile',
+  verifyToken,
+  validate(updateProfileSchema),
+  userController.updateProfile
+); // Update logged-in user's profile
+router.put(
+  '/change-password',
+  verifyToken,
+  validate(changePasswordSchema),
+  userController.changePassword
+); // Change logged-in user's password
+router.put(
+  '/change-password/verify',
+  verifyToken,
+  validate(verifyPasswordResetSchema),
+  userController.verifyChangePassword
+); // Confirm new password / verify password reset
+router.post(
+  '/password-reset/request',
+  validate(requestPasswordResetSchema),
+  userController.requestPasswordReset
+); // Request password reset OTP (public)
+router.put(
+  '/password-reset/verify',
+  validate(verifyPasswordResetSchema),
+  userController.verifyChangePassword
+); // Verify OTP and set new password (public)
+router.post(
+  '/change-email/request',
+  verifyToken,
+  validate(changeEmailRequestSchema),
+  userController.requestChangeEmail
+); // Request email change (OTP/link)
+router.put(
+  '/change-email/verify',
+  verifyToken,
+  validate(verifyChangeEmailSchema),
+  userController.verifyChangeEmail
+); // Verify OTP and update email
+router.post(
+  '/change-phone/request',
+  verifyToken,
+  validate(requestChangePhoneSchema),
+  userController.requestChangePhone
+); // Request phone change (SMS OTP)
+router.put(
+  '/change-phone/verify',
+  verifyToken,
+  validate(verifyChangePhoneSchema),
+  userController.verifyChangePhone
+); // Verify SMS OTP and update phone
+router.get('/favorites', verifyToken, userController.getFavorites); // Get logged-in user's favorites
 
 // ==================== Admin Routes ====================
-// TODO: add verifyToken, isAdmin middlewares
 
-router.get('/', (req, res) => {}); // Get list of all users
-router.get('/:id', (req, res) => {}); // Get user details by ID
-router.put('/:id', (req, res) => {}); // Update user by ID
-router.put('/:id/role', (req, res) => {}); // Change user role
-router.delete('/:id', (req, res) => {}); // Delete or ban a user
+router.get('/', verifyToken, isAdmin, userController.getAllUsers); // Get list of all users
+router.get(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  userController.getUserById
+); // Get user details by ID
+router.put(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  validate(updateProfileSchema),
+  userController.updateUserById
+); // Update user by ID
+router.put(
+  '/:id/role',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  validate(updateUserRoleSchema),
+  userController.updateUserRole
+); // Change user role
+router.delete(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  userController.deleteUser
+); // Delete or ban a user
 
 module.exports = router;

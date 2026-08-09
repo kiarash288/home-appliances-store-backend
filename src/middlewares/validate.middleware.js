@@ -3,10 +3,19 @@
  *
  * Usage:
  *   const validate = require('../middlewares/validate.middleware');
+ *   const { validateParams } = require('../middlewares/validate.middleware');
  *   const { registerSchema } = require('../validators/auth.validator');
  *
  *   router.post('/register', validate(registerSchema), controller);
+ *   router.get('/:id', validateParams(idParamSchema), controller);
  */
+
+function formatZodErrors(error) {
+  return error.issues.map((issue) => ({
+    field: issue.path.join('.') || 'value',
+    message: issue.message,
+  }));
+}
 
 /**
  * Higher-order middleware that validates req.body against a Zod schema.
@@ -18,21 +27,38 @@ const validate = (schema) => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
-      const errors = result.error.issues.map((issue) => ({
-        field: issue.path.join('.') || 'body',
-        message: issue.message,
-      }));
-
       return res.status(400).json({
         message: 'Validation failed',
-        errors,
+        errors: formatZodErrors(result.error),
       });
     }
 
-    // Replace with parsed/stripped data from Zod
     req.body = result.data;
     next();
   };
 };
 
+/**
+ * Higher-order middleware that validates req.params against a Zod schema.
+ *
+ * @param {import('zod').ZodSchema} schema - Zod schema to validate against
+ */
+const validateParams = (schema) => {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.params);
+
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: formatZodErrors(result.error),
+      });
+    }
+
+    // Merge so route params stay available; coerce types (e.g. string id -> number)
+    req.params = { ...req.params, ...result.data };
+    next();
+  };
+};
+
 module.exports = validate;
+module.exports.validateParams = validateParams;

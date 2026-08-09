@@ -22,30 +22,30 @@ async function updateById(id, updateData) {
 
 async function getUserAddresses(userId) {
   return Address.findAll({
-    where: { user_id: userId },
+    where: { userId },
   });
 }
 
-
-async function deleteByUserAndId(userId, addressId) {
-  return Address.destroy({
-    where: {
-      id: addressId,
-      user_id: userId,
-    },
-  });
-}
 async function checkLimitation(userId) {
-  const addresses = await Address.findAll({
-    where: { user_id: userId },
+  const count = await Address.count({
+    where: { userId },
   });
-  return addresses.length < 3;
+  return count < 3;
+}
+
+async function resetUserDefaultAddresses(userId) {
+  return Address.update(
+    { isDefault: false },
+    { where: { userId } }
+  );
 }
 
 module.exports = {
   create,
   findById,
-  getUserAddresses,
+  deleteById,
   updateById,
-  deleteByUserAndId,
+  getUserAddresses,
+  checkLimitation,
+  resetUserDefaultAddresses,
 };

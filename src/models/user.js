@@ -79,6 +79,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         unique: 'uq_users_email',
       },
+      phone: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+        unique: 'uq_users_phone',
+      },
       password: {
         type: DataTypes.STRING(255),
         allowNull: false,

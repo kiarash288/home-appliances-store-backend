@@ -1,18 +1,49 @@
 const express = require('express');
 const router = express.Router();
 
+const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
+const validate = require('../middlewares/validate.middleware');
+const { validateParams } = require('../middlewares/validate.middleware');
+const { idParamSchema } = require('../validators/common.validator');
+const {
+  createCategorySchema,
+  updateCategorySchema,
+} = require('../validators/category.validator');
+const categoryController = require('../controllers/category.controller');
+
 // ==================== Public Routes ====================
 // No authentication required
 
-router.get('/', (req, res) => {}); // Get all categories
-router.get('/:id', (req, res) => {}); // Get category details by ID
+router.get('/', categoryController.getAllCategories); // Get all categories
+router.get(
+  '/:id',
+  validateParams(idParamSchema),
+  categoryController.getCategoryById
+); // Get category details by ID
 
 // ==================== Admin Routes ====================
-// TODO: add verifyToken, isAdmin middlewares
 
-router.post('/main', (req, res) => {}); // Create a new category
-router.post('/sub', (req, res) => {}); // Create a new sub category
-router.put('/:id', (req, res) => {}); // Update a category
-router.delete('/:id', (req, res) => {}); // Delete a category
+router.post(
+  '/',
+  verifyToken,
+  isAdmin,
+  validate(createCategorySchema),
+  categoryController.createCategory
+); // Create a new category
+router.put(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  validate(updateCategorySchema),
+  categoryController.updateCategory
+); // Update a category
+router.delete(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(idParamSchema),
+  categoryController.deleteCategory
+); // Delete a category
 
 module.exports = router;
