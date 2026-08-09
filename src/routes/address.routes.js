@@ -4,11 +4,10 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validate.middleware');
 const { validateParams } = require('../middlewares/validate.middleware');
+const { createParamIdSchema } = require('../validators/common.validator');
 const {
   createAddressSchema,
   updateAddressSchema,
-  addressIdParamSchema,
-  userIdParamSchema,
 } = require('../validators/address.validator');
 const addressController = require('../controllers/address.controller');
 
@@ -29,14 +28,14 @@ router.get(
   '/user/:userId',
   verifyToken,
   isAdmin,
-  validateParams(userIdParamSchema),
+  validateParams(createParamIdSchema('userId')),
   addressController.getAddressesByUserIdAsAdmin
 ); // Get all addresses of a specific user
 router.put(
   '/admin/:id',
   verifyToken,
   isAdmin,
-  validateParams(addressIdParamSchema),
+  validateParams(createParamIdSchema('id')),
   validate(updateAddressSchema),
   addressController.updateAddressAsAdmin
 ); // Update any address (support)
@@ -44,7 +43,7 @@ router.delete(
   '/admin/:id',
   verifyToken,
   isAdmin,
-  validateParams(addressIdParamSchema),
+  validateParams(createParamIdSchema('id')),
   addressController.deleteAddressAsAdmin
 ); // Delete a problematic address
 
@@ -53,20 +52,20 @@ router.delete(
 router.put(
   '/:id',
   verifyToken,
-  validateParams(addressIdParamSchema),
+  validateParams(createParamIdSchema('id')),
   validate(updateAddressSchema),
   addressController.updateAddress
 ); // Update user's specific address
 router.delete(
   '/:id',
   verifyToken,
-  validateParams(addressIdParamSchema),
+  validateParams(createParamIdSchema('id')),
   addressController.deleteAddress
 ); // Delete user's specific address
 router.put(
   '/:id/default',
   verifyToken,
-  validateParams(addressIdParamSchema),
+  validateParams(createParamIdSchema('id')),
   addressController.setAddressAsDefault
 ); // Set address as default
 

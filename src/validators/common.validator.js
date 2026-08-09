@@ -135,29 +135,16 @@ const verifyOtpSchema = z
   })
   .strict();
 
-const idParamSchema = z
-  .object({
-    id: idField('ID'),
-  })
-  .strict();
-
-const productIdParamSchema = z
-  .object({
-    productId: idField('Product ID'),
-  })
-  .strict();
-
-const itemIdParamSchema = z
-  .object({
-    itemId: idField('Item ID'),
-  })
-  .strict();
-
-const reviewIdParamSchema = z
-  .object({
-    reviewId: idField('Review ID'),
-  })
-  .strict();
+/**
+ * Builds a strict Zod schema that validates a single route param as a positive integer ID.
+ * @param {string} paramName - Route param key (e.g. 'id', 'productId', 'userId')
+ */
+const createParamIdSchema = (paramName) =>
+  z
+    .object({
+      [paramName]: idField(paramName),
+    })
+    .strict();
 
 module.exports = {
   POSTAL_CODE_REGEX,
@@ -173,8 +160,5 @@ module.exports = {
   emailField,
   phoneField,
   verifyOtpSchema,
-  idParamSchema,
-  productIdParamSchema,
-  itemIdParamSchema,
-  reviewIdParamSchema,
+  createParamIdSchema,
 };

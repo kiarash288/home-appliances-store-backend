@@ -4,7 +4,7 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validate.middleware');
 const { validateParams } = require('../middlewares/validate.middleware');
-const { idParamSchema } = require('../validators/common.validator');
+const { createParamIdSchema } = require('../validators/common.validator');
 const {
   updateProfileSchema,
   changePasswordSchema,
@@ -82,14 +82,14 @@ router.get(
   '/:id',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   userController.getUserById
 ); // Get user details by ID
 router.put(
   '/:id',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   validate(updateProfileSchema),
   userController.updateUserById
 ); // Update user by ID
@@ -97,7 +97,7 @@ router.put(
   '/:id/role',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   validate(updateUserRoleSchema),
   userController.updateUserRole
 ); // Change user role
@@ -105,7 +105,7 @@ router.delete(
   '/:id',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   userController.deleteUser
 ); // Delete or ban a user
 

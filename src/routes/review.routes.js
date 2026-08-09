@@ -4,11 +4,7 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validate.middleware');
 const { validateParams } = require('../middlewares/validate.middleware');
-const {
-  itemIdParamSchema,
-  reviewIdParamSchema,
-  idParamSchema,
-} = require('../validators/common.validator');
+const { createParamIdSchema } = require('../validators/common.validator');
 const {
   createReviewSchema,
   updateReviewSchema,
@@ -21,7 +17,7 @@ const reviewController = require('../controllers/review.controller');
 
 router.get(
   '/item/:itemId',
-  validateParams(itemIdParamSchema),
+  validateParams(createParamIdSchema('itemId')),
   reviewController.getProductReviews
 ); // Get all approved reviews for an item
 
@@ -30,7 +26,7 @@ router.get(
 router.post(
   '/item/:itemId',
   verifyToken,
-  validateParams(itemIdParamSchema),
+  validateParams(createParamIdSchema('itemId')),
   validate(createReviewSchema),
   reviewController.createReview
 ); // Create a new review for an item
@@ -38,14 +34,14 @@ router.get('/my-reviews', verifyToken, (req, res) => {}); // Get reviews written
 router.put(
   '/:reviewId',
   verifyToken,
-  validateParams(reviewIdParamSchema),
+  validateParams(createParamIdSchema('reviewId')),
   validate(updateReviewSchema),
   (req, res) => {}
 ); // Update own review
 router.delete(
   '/:reviewId',
   verifyToken,
-  validateParams(reviewIdParamSchema),
+  validateParams(createParamIdSchema('reviewId')),
   reviewController.deleteReview
 ); // Delete own review
 
@@ -56,14 +52,14 @@ router.get(
   '/:id',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   (req, res) => {}
 ); // Get review details by ID
 router.put(
   '/:id/status',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   validate(updateReviewStatusSchema),
   (req, res) => {}
 ); // Approve or reject a review
@@ -71,7 +67,7 @@ router.delete(
   '/admin/:id',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   (req, res) => {}
 ); // Force delete any review
 

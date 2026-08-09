@@ -7,7 +7,7 @@
  *   const { registerSchema } = require('../validators/auth.validator');
  *
  *   router.post('/register', validate(registerSchema), controller);
- *   router.get('/:id', validateParams(idParamSchema), controller);
+ *   router.get('/:id', validateParams(createParamIdSchema('id')), controller);
  */
 
 function formatZodErrors(error) {

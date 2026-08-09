@@ -4,7 +4,7 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validate.middleware');
 const { validateParams } = require('../middlewares/validate.middleware');
-const { idParamSchema } = require('../validators/common.validator');
+const { createParamIdSchema } = require('../validators/common.validator');
 const {
   createCategorySchema,
   updateCategorySchema,
@@ -17,7 +17,7 @@ const categoryController = require('../controllers/category.controller');
 router.get('/', categoryController.getAllCategories); // Get all categories
 router.get(
   '/:id',
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   categoryController.getCategoryById
 ); // Get category details by ID
 
@@ -34,7 +34,7 @@ router.put(
   '/:id',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   validate(updateCategorySchema),
   categoryController.updateCategory
 ); // Update a category
@@ -42,7 +42,7 @@ router.delete(
   '/:id',
   verifyToken,
   isAdmin,
-  validateParams(idParamSchema),
+  validateParams(createParamIdSchema('id')),
   categoryController.deleteCategory
 ); // Delete a category
 

@@ -3,7 +3,6 @@ const {
   POSTAL_CODE_REGEX,
   stringField,
   phoneField,
-  idField,
   requireAtLeastOneField,
 } = require('./common.validator');
 
@@ -33,21 +32,7 @@ const updateAddressSchema = requireAtLeastOneField(
   z.object(addressShape).strict().partial()
 );
 
-const addressIdParamSchema = z
-  .object({
-    id: idField('Address ID'),
-  })
-  .strict();
-
-const userIdParamSchema = z
-  .object({
-    userId: idField('User ID'),
-  })
-  .strict();
-
 module.exports = {
   createAddressSchema,
   updateAddressSchema,
-  addressIdParamSchema,
-  userIdParamSchema,
 };
