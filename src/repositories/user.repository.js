@@ -33,11 +33,16 @@ async function findByPhone(phone) {
   return User.findOne({ where: { phone } });
 }
 
+async function findByRefreshToken(refreshToken) {
+  return User.findOne({ where: { refreshToken } });
+}
+
 module.exports = {
   create,
   findById,
   findByEmail,
   findByPhone,
+  findByRefreshToken,
   getAll,
   updateById,
   deleteById,

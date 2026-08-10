@@ -1,14 +1,39 @@
 const express = require('express');
 const router = express.Router();
 
-// ==================== Customer Routes ====================
-// TODO: add verifyToken middleware (requires user to be logged in)
-// Note: Admins do not manage active baskets
+const { verifyToken } = require('../middlewares/auth.middleware');
+const validate = require('../middlewares/validate.middleware');
+const { validateParams } = require('../middlewares/validate.middleware');
+const { createParamIdSchema } = require('../validators/common.validator');
+const {
+  addItemSchema,
+  updateQuantitySchema,
+} = require('../validators/basket.validator');
+const basketController = require('../controllers/basket.controller');
 
-router.get('/', (req, res) => {}); // Get the logged-in user's active basket
-router.post('/item', (req, res) => {}); // Add a new item to the basket (itemId, quantity)
-router.put('/item/:itemId', (req, res) => {}); // Update quantity of a specific item
-router.delete('/item/:itemId', (req, res) => {}); // Remove a specific item from the basket
-router.delete('/', (req, res) => {}); // Clear the entire basket
+// ==================== Customer Routes ====================
+// All basket routes require authentication
+
+router.get('/', verifyToken, basketController.getBasket); // Get the logged-in user's active basket
+router.post(
+  '/items',
+  verifyToken,
+  validate(addItemSchema),
+  basketController.addItem
+); // Add a new item to the basket (productId, quantity)
+router.put(
+  '/items/:itemId',
+  verifyToken,
+  validateParams(createParamIdSchema('itemId')),
+  validate(updateQuantitySchema),
+  basketController.updateQuantity
+); // Update quantity of a specific item
+router.delete(
+  '/items/:itemId',
+  verifyToken,
+  validateParams(createParamIdSchema('itemId')),
+  basketController.removeItem
+); // Remove a specific item from the basket
+router.delete('/', verifyToken, basketController.clearBasket); // Clear the entire basket
 
 module.exports = router;

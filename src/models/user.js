@@ -3,7 +3,7 @@ const { Model, DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
   class User extends Model {
     static associate(models) {
-      User.hasMany(models.Item, { // one to many relationship with items for creators
+      User.hasMany(models.Item, {
         foreignKey: 'user_id',
         as: 'items',
         onDelete: 'CASCADE',
@@ -45,7 +45,7 @@ module.exports = (sequelize) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       });
-      User.belongsToMany(models.Item, { // many to many relationship with items for favorites table
+      User.belongsToMany(models.Item, {
         through: models.Favorite,
         foreignKey: 'user_id',
         otherKey: 'item_id',
@@ -66,11 +66,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 'user',
       },
-      first_name: {
+      firstName: {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
-      last_name: {
+      lastName: {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
@@ -87,6 +87,15 @@ module.exports = (sequelize) => {
       password: {
         type: DataTypes.STRING(255),
         allowNull: false,
+      },
+      refreshToken: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
     },
     {

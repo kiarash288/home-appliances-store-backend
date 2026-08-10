@@ -4,6 +4,13 @@ async function createBasket(userId) {
   return Basket.create({ user_id: userId });
 }
 
+async function findBasketByUserId(userId) {
+  return Basket.findOne({
+    where: { user_id: userId },
+    order: [['createdAt', 'DESC']],
+  });
+}
+
 async function getBasketWithItems(userId) {
   return Basket.findOne({
     where: { user_id: userId },
@@ -15,6 +22,7 @@ async function getBasketWithItems(userId) {
           {
             model: Item,
             as: 'item',
+            attributes: ['id', 'name', 'price', 'main_image', 'stock'],
           },
         ],
       },
@@ -70,6 +78,7 @@ async function clearBasket(basketId) {
 
 module.exports = {
   createBasket,
+  findBasketByUserId,
   getBasketWithItems,
   checkItemInBasket,
   addItem,

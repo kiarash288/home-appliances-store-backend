@@ -1,12 +1,9 @@
-const crypto = require('crypto');
-const { promisify } = require('util');
+const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/user.repository');
 const favoriteRepository = require('../repositories/favorite.repository');
 const otpService = require('./otp.service');
 const mailService = require('./mail.service');
 const smsService = require('./sms.service');
-
-const scrypt = promisify(crypto.scrypt);
 
 function toPublicUser(user) {
   if (!user) {
@@ -15,13 +12,12 @@ function toPublicUser(user) {
 
   const data = typeof user.toJSON === 'function' ? user.toJSON() : { ...user };
   delete data.password;
+  delete data.refreshToken;
   return data;
 }
 
 async function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const derivedKey = await scrypt(password, salt, 64);
-  return `${salt}:${derivedKey.toString('hex')}`;
+  return bcrypt.hash(password, 10);
 }
 
 async function getProfile(userId) {
@@ -195,7 +191,6 @@ async function deleteUser(id) {
 module.exports = {
   getProfile,
   updateProfile,
-  changePassword,
   requestPasswordReset,
   verifyPasswordReset,
   requestChangeEmail,

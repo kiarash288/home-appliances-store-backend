@@ -4,11 +4,9 @@ const { numberField, idField } = require('./common.validator');
 /**
  * Basket body schemas.
  *
- * Model mapping (src/models/BasketItem.js): `itemId` -> `item_id`.
  * The basket itself is resolved from the authenticated user, never from the body.
  */
 
-// Upper bound guards against a single request reserving the whole stock
 const quantityField = numberField('Quantity').pipe(
   z
     .number()
@@ -17,16 +15,25 @@ const quantityField = numberField('Quantity').pipe(
     .max(100, { error: 'Quantity must be at most 100' })
 );
 
+// Allows 0 so the client can clear a line item via PUT
+const updateQuantityField = numberField('Quantity').pipe(
+  z
+    .number()
+    .int({ error: 'Quantity must be an integer' })
+    .min(0, { error: 'Quantity must be at least 0' })
+    .max(100, { error: 'Quantity must be at most 100' })
+);
+
 const addItemSchema = z
   .object({
-    itemId: idField('Item id'),
+    productId: idField('Product id'),
     quantity: quantityField,
   })
   .strict();
 
 const updateQuantitySchema = z
   .object({
-    quantity: quantityField,
+    quantity: updateQuantityField,
   })
   .strict();
 
