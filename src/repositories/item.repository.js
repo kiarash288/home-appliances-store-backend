@@ -16,39 +16,36 @@ async function getAll(queryFilters = {}) {
     where.name = { [Op.like]: `%${queryFilters.name}%` };
   }
 
-  if (queryFilters.category_id) {
-    where.category_id = queryFilters.category_id;
+  const categoryId = queryFilters.categoryId || queryFilters.category_id;
+  if (categoryId) {
+    where.category_id = categoryId;
   }
 
-  // ۱. دریافت شماره صفحه و تعداد آیتم‌ها (با مقادیر پیش‌فرض)
-  const page = parseInt(queryFilters.page) || 1;   // اگر صفحه‌ای نداد، همون صفحه ۱ رو در نظر بگیر
-  const limit = parseInt(queryFilters.limit) || 20; // دیفالت ۲۰ آیتم در هر صفحه
+  const page = parseInt(queryFilters.page, 10) || 1;
+  const limit = parseInt(queryFilters.limit, 10) || 20;
+  const offset = (page - 1) * limit;
 
-  // ۲. محاسبه Offset
-  const offset = (page - 1) * limit; 
-  /* 
-    مثال برای درک Offset:
-    صفحه ۱: (1 - 1) * 20 = 0  -> هیچی رو رد نکن، 20 تای اول رو بده
-    صفحه ۲: (2 - 1) * 20 = 20 -> 20 تای اول رو رد کن، از 21 تا 40 رو بده
-  */
-
-  // ۳. کوئری زدن به دیتابیس
   const { count, rows } = await Item.findAndCountAll({
     where,
+    include: [
+      {
+        model: Category,
+        as: 'category',
+      },
+    ],
     limit,
     offset,
-    order: [['createdAt', 'DESC']], // مرتب‌سازی: جدیدترین‌ها اول
+    order: [['createdAt', 'DESC']],
+    distinct: true,
   });
 
-  // ۴. محاسبه تعداد کل صفحات
   const totalPages = Math.ceil(count / limit);
 
-  // ۵. ساختاردهی خروجی برای فرانت‌اند
   return {
-    totalItems: count,      // کل آیتم‌های موجود تو دیتابیس (مثلا 150 تا)
-    totalPages: totalPages, // کل صفحات (مثلا 8 صفحه)
-    currentPage: page,      // صفحه فعلی (مثلا 2)
-    items: rows,            // دیتای همون 20 تا آیتم صفحه فعلی
+    totalItems: count,
+    totalPages,
+    currentPage: page,
+    items: rows,
   };
 }
 

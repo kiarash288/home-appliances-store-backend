@@ -1,24 +1,64 @@
 const express = require('express');
 const router = express.Router();
 
+const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
+const validate = require('../middlewares/validate.middleware');
+const { validateParams } = require('../middlewares/validate.middleware');
+const { createParamIdSchema } = require('../validators/common.validator');
+const {
+  createItemSchema,
+  updateItemSchema,
+} = require('../validators/item.validator');
+const itemController = require('../controllers/item.controller');
+
 // ==================== Public Routes ====================
 // No authentication required
 
-router.get('/', (req, res) => {}); // Get all items (search, filter, sort, pagination via query)
-router.get('/:id', (req, res) => {}); // Get full item details by ID
+router.get('/', itemController.getAll); // Get all items (search, filter, pagination via query)
+router.get(
+  '/:id',
+  validateParams(createParamIdSchema('id')),
+  itemController.getOne
+); // Get full item details by ID
 
 // ==================== Customer Routes ====================
-// TODO: add verifyToken middleware
 
-router.post('/:id/favorite', (req, res) => {}); // Add item to favorites
-router.delete('/:id/favorite', (req, res) => {}); // Remove item from favorites
+router.post(
+  '/:id/favorite',
+  verifyToken,
+  validateParams(createParamIdSchema('id')),
+  (req, res) => {}
+); // Add item to favorites
+router.delete(
+  '/:id/favorite',
+  verifyToken,
+  validateParams(createParamIdSchema('id')),
+  (req, res) => {}
+); // Remove item from favorites
 
 // ==================== Admin Routes ====================
-// TODO: add verifyToken, isAdmin middlewares
 
-router.post('/', (req, res) => {}); // Create a new item
-router.put('/:id', (req, res) => {}); // Update item details
-router.delete('/:id', (req, res) => {}); // Delete an item
-
+router.post(
+  '/',
+  verifyToken,
+  isAdmin,
+  validate(createItemSchema),
+  itemController.create
+); // Create a new item
+router.put(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(createParamIdSchema('id')),
+  validate(updateItemSchema),
+  itemController.update
+); // Update item details
+router.delete(
+  '/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(createParamIdSchema('id')),
+  itemController.remove
+); // Delete an item
 
 module.exports = router;
