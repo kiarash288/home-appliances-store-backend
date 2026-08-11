@@ -1,21 +1,22 @@
 const express = require('express');
 const router = express.Router();
 
-// ==================== Customer/Payment Flow Routes ====================
+const { verifyToken } = require('../middlewares/auth.middleware');
+const { validateParams } = require('../middlewares/validate.middleware');
+const { createParamIdSchema } = require('../validators/common.validator');
+const paymentController = require('../controllers/payment.controller');
 
-// TODO: add verifyToken middleware
-router.post('/request/:orderId', (req, res) => {}); // Initiate payment for an order
+// ==================== Payment Flow (ZarinPal) ====================
 
-// Publicly accessible - payment gateway callback
-router.get('/verify', (req, res) => {}); // Verify transaction after gateway redirect
+// Public — ZarinPal redirects here with ?Authority=&Status= (GET).
+// Registered before param routes so "callback" is never treated as an orderId.
+router.get('/callback', paymentController.verifyCallback);
 
-// TODO: add verifyToken middleware
-router.get('/me', (req, res) => {}); // Get payment history for logged-in user
-
-// ==================== Admin Routes ====================
-// TODO: add verifyToken, isAdmin middlewares
-
-router.get('/', (req, res) => {}); // Get all payments
-router.get('/:id', (req, res) => {}); // Get payment details by ID
+router.post(
+  '/:orderId/init',
+  verifyToken,
+  validateParams(createParamIdSchema('orderId')),
+  paymentController.initiate
+);
 
 module.exports = router;

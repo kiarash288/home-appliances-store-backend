@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/user.repository');
-const favoriteRepository = require('../repositories/favorite.repository');
 const otpService = require('./otp.service');
 const mailService = require('./mail.service');
 const smsService = require('./sms.service');
@@ -136,14 +135,6 @@ async function verifyChangePhone(userId, newPhone, otp) {
   return { message: 'Phone number updated successfully', user: toPublicUser(updated) };
 }
 
-async function getFavorites(userId) {
-  const user = await userRepository.findById(userId);
-  if (!user) {
-    throw new Error('User not found');
-  }
-  return favoriteRepository.getUserFavorites(userId);
-}
-
 async function getAllUsers() {
   const users = await userRepository.getAll();
   return users.map(toPublicUser);
@@ -197,7 +188,6 @@ module.exports = {
   verifyChangeEmail,
   requestChangePhone,
   verifyChangePhone,
-  getFavorites,
   getAllUsers,
   getUserById,
   updateUserById,

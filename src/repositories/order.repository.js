@@ -1,7 +1,15 @@
 const { Order, OrderItem, Item, Address, Payment, User } = require('../models');
 
-async function create(orderData) {
-  return Order.create(orderData);
+async function create(orderData, options = {}) {
+  return Order.create(orderData, options);
+}
+
+async function bulkCreateOrderItems(items, options = {}) {
+  return OrderItem.bulkCreate(items, options);
+}
+
+async function findById(orderId, options = {}) {
+  return Order.findByPk(orderId, options);
 }
 
 async function getAll(queryFilters = {}) {
@@ -9,15 +17,12 @@ async function getAll(queryFilters = {}) {
 
   if (queryFilters.status) {
     where.status = queryFilters.status;
-    order.push(['createdAt', 'DESC']);
   }
-
 
   if (queryFilters.tracking_code) {
     where.tracking_code = queryFilters.tracking_code;
-    order.push(['createdAt', 'DESC']);
   }
-  
+
   return Order.findAll({
     where,
     include: [
@@ -33,6 +38,19 @@ async function getAll(queryFilters = {}) {
 async function getUserOrders(userId) {
   return Order.findAll({
     where: { user_id: userId },
+    include: [
+      {
+        model: OrderItem,
+        as: 'orderItems',
+        include: [
+          {
+            model: Item,
+            as: 'item',
+            attributes: ['id', 'name', 'main_image'],
+          },
+        ],
+      },
+    ],
     order: [['createdAt', 'DESC']],
   });
 }
@@ -66,12 +84,12 @@ async function getOrderWithDetails(orderId, userId) {
   });
 }
 
-async function updateStatus(orderId, status) {
-  const order = await Order.findByPk(orderId);
+async function updateStatus(orderId, status, options = {}) {
+  const order = await Order.findByPk(orderId, options);
   if (!order) {
     return null;
   }
-  return order.update({ status });
+  return order.update({ status }, options);
 }
 
 async function deleteById(orderId) {
@@ -80,6 +98,8 @@ async function deleteById(orderId) {
 
 module.exports = {
   create,
+  bulkCreateOrderItems,
+  findById,
   getAll,
   getUserOrders,
   getOrderWithDetails,

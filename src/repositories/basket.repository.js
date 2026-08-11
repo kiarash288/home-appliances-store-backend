@@ -11,7 +11,7 @@ async function findBasketByUserId(userId) {
   });
 }
 
-async function getBasketWithItems(userId) {
+async function getBasketWithItems(userId, options = {}) {
   return Basket.findOne({
     where: { user_id: userId },
     include: [
@@ -28,6 +28,7 @@ async function getBasketWithItems(userId) {
       },
     ],
     order: [['createdAt', 'DESC']],
+    ...options,
   });
 }
 
@@ -70,9 +71,10 @@ async function removeItem(basketId, itemId) {
   });
 }
 
-async function clearBasket(basketId) {
+async function clearBasket(basketId, options = {}) {
   return BasketItem.destroy({
     where: { basket_id: basketId },
+    ...options,
   });
 }
 

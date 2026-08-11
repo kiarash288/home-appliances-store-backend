@@ -160,6 +160,7 @@ CREATE TABLE IF NOT EXISTS payments (
   amount DECIMAL(10, 2) NOT NULL,
   gateway_name VARCHAR(100) NOT NULL,
   tracking_code VARCHAR(255) NULL,
+  ref_id VARCHAR(255) NULL,
   status ENUM('pending', 'success', 'failed') NOT NULL DEFAULT 'pending',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -167,6 +168,7 @@ CREATE TABLE IF NOT EXISTS payments (
   KEY idx_payments_order_id (order_id),
   KEY idx_payments_status (status),
   KEY idx_payments_tracking_code (tracking_code),
+  KEY idx_payments_ref_id (ref_id),
   CONSTRAINT fk_payments_order_id
     FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

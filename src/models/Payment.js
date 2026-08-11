@@ -35,6 +35,10 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
+        ref_id: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
       status: {
         type: DataTypes.ENUM('pending', 'success', 'failed'),
         allowNull: false,

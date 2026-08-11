@@ -21,21 +21,6 @@ router.get(
   itemController.getOne
 ); // Get full item details by ID
 
-// ==================== Customer Routes ====================
-
-router.post(
-  '/:id/favorite',
-  verifyToken,
-  validateParams(createParamIdSchema('id')),
-  (req, res) => {}
-); // Add item to favorites
-router.delete(
-  '/:id/favorite',
-  verifyToken,
-  validateParams(createParamIdSchema('id')),
-  (req, res) => {}
-); // Remove item from favorites
-
 // ==================== Admin Routes ====================
 
 router.post(

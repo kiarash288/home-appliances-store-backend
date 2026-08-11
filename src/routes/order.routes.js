@@ -1,27 +1,73 @@
 const express = require('express');
 const router = express.Router();
 
-// ==================== Customer Routes ====================
-// TODO: add verifyToken middleware
-// Note: Customers cannot freely UPDATE or DELETE an order (financial document)
+const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
+const { requireVerifiedEmail } = require('../middlewares/verifyEmail.middleware');
+const validate = require('../middlewares/validate.middleware');
+const { validateParams } = require('../middlewares/validate.middleware');
+const { createParamIdSchema } = require('../validators/common.validator');
+const {
+  createOrderSchema,
+  updateStatusSchema,
+} = require('../validators/order.validator');
+const orderController = require('../controllers/order.controller');
 
-router.post('/', (req, res) => {}); // Create a new order (from current basket)
-router.get('/', (req, res) => {}); // Get order history for logged-in user
+// ==================== Customer Routes ====================
+
+router.post(
+  '/',
+  verifyToken,
+  requireVerifiedEmail,
+  validate(createOrderSchema),
+  orderController.create
+); // Create a new order (from current basket)
+router.get('/', verifyToken, orderController.getAll); // Get order history for logged-in user
 
 // ==================== Admin Routes ====================
-// TODO: add verifyToken, isAdmin middlewares
 // Registered before /:id so "admin" is not captured as an id param
 
-router.get('/admin', (req, res) => {}); // Get all orders across the platform
-router.get('/admin/tracking/:trackingCode', (req, res) => {}); // Find order by tracking code
-router.get('/admin/:id', (req, res) => {}); // Get full details of any specific order
-router.put('/admin/:id/status', (req, res) => {}); // Update order status
-router.delete('/admin/:id', (req, res) => {}); // Soft delete or archive an order
+router.get('/admin', verifyToken, isAdmin, (req, res) => {}); // Get all orders across the platform
+router.get('/admin/tracking/:trackingCode', verifyToken, isAdmin, (req, res) => {}); // Find order by tracking code
+router.get(
+  '/admin/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(createParamIdSchema('id')),
+  (req, res) => {}
+); // Get full details of any specific order
+router.put(
+  '/admin/:id/status',
+  verifyToken,
+  isAdmin,
+  validateParams(createParamIdSchema('id')),
+  validate(updateStatusSchema),
+  orderController.updateStatus
+); // Update order status
+router.delete(
+  '/admin/:id',
+  verifyToken,
+  isAdmin,
+  validateParams(createParamIdSchema('id')),
+  (req, res) => {}
+); // Soft delete or archive an order
 
 // ==================== Customer Routes (by id) ====================
-// TODO: add verifyToken middleware
 
-router.get('/:id', (req, res) => {}); // Get full details/receipt of a specific order
-// router.put('/:id/cancel', (req, res) => {}); // Cancel an order (if not yet shipped)
+router.get(
+  '/:id',
+  verifyToken,
+  validateParams(createParamIdSchema('id')),
+  orderController.getOne
+); // Get full details/receipt of a specific order
+
+// Also support PUT /:id/status for admin as specified
+router.put(
+  '/:id/status',
+  verifyToken,
+  isAdmin,
+  validateParams(createParamIdSchema('id')),
+  validate(updateStatusSchema),
+  orderController.updateStatus
+); // Update order status (admin)
 
 module.exports = router;

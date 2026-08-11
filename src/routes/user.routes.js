@@ -73,7 +73,6 @@ router.put(
   validate(verifyChangePhoneSchema),
   userController.verifyChangePhone
 ); // Verify SMS OTP and update phone
-router.get('/favorites', verifyToken, userController.getFavorites); // Get logged-in user's favorites
 
 // ==================== Admin Routes ====================
 

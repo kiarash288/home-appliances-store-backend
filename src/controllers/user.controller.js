@@ -102,15 +102,6 @@ async function verifyChangePhone(req, res) {
   }
 }
 
-async function getFavorites(req, res) {
-  try {
-    const favorites = await userService.getFavorites(req.user.id);
-    return res.status(200).json(favorites);
-  } catch (error) {
-    return res.status(getStatusCode(error)).json({ message: error.message });
-  }
-}
-
 async function getAllUsers(req, res) {
   try {
     const users = await userService.getAllUsers();
@@ -166,7 +157,6 @@ module.exports = {
   verifyChangeEmail,
   requestChangePhone,
   verifyChangePhone,
-  getFavorites,
   getAllUsers,
   getUserById,
   updateUserById,

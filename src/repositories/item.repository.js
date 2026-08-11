@@ -103,17 +103,19 @@ async function deleteById(id) {
   return Item.destroy({ where: { id } });
 }
 
-async function decreaseStock(id, quantity) {
+async function decreaseStock(id, quantity, options = {}) {
   return Item.decrement('stock', {
     by: quantity,
     where: { id },
+    ...options,
   });
 }
 
-async function increaseStock(id, quantity) {
+async function increaseStock(id, quantity, options = {}) {
   return Item.increment('stock', {
     by: quantity,
     where: { id },
+    ...options,
   });
 }
 
