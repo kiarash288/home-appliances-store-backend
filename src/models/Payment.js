@@ -35,7 +35,7 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
-        ref_id: {
+      ref_id: {
         type: DataTypes.STRING(255),
         allowNull: true,
       },

@@ -47,13 +47,32 @@ async function updateProfile(req, res) {
 
 async function changePassword(req, res) {
   try {
-    const result = await userService.requestPasswordReset(req.user.id, req.body);
+    // Authenticated user: send OTP to their account email
+    const user = await userService.getProfile(req.user.id);
+    const result = await userService.requestPasswordReset(user.email);
     return res.status(200).json(result);
   } catch (error) {
     return res.status(getStatusCode(error)).json({ message: error.message });
   }
 }
 
+/**
+ * Public password-reset request.
+ * Body: { email } — generates an OTP and emails it to the user.
+ */
+async function requestPasswordReset(req, res) {
+  try {
+    const result = await userService.requestPasswordReset(req.body.email);
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(getStatusCode(error)).json({ message: error.message });
+  }
+}
+
+/**
+ * Verify OTP and set a new password (public or authenticated verify routes).
+ * Body: { email, otp, newPassword }
+ */
 async function verifyChangePassword(req, res) {
   try {
     const { email, otp, newPassword } = req.body;
@@ -63,6 +82,10 @@ async function verifyChangePassword(req, res) {
     return res.status(getStatusCode(error)).json({ message: error.message });
   }
 }
+
+/** Alias used for the public reset-password verify step */
+const resetPassword = verifyChangePassword;
+
 
 async function requestChangeEmail(req, res) {
   try {
@@ -153,6 +176,7 @@ module.exports = {
   changePassword,
   requestPasswordReset,
   verifyChangePassword,
+  resetPassword,
   requestChangeEmail,
   verifyChangeEmail,
   requestChangePhone,

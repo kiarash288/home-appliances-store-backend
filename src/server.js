@@ -12,7 +12,21 @@ async function startServer() {
     console.log('✅ Connection has been established successfully.');
 
     // ۲. ساخت جدول‌ها
-    await db.sequelize.sync({ alter: true });
+    // Prefer alter for schema drift, but fall back when MySQL constraint
+    // metadata is out of sync (common with renamed FKs / older dumps).
+    try {
+      await db.sequelize.sync({ alter: true });
+    } catch (syncError) {
+      if (syncError.name === 'SequelizeUnknownConstraintError') {
+        console.warn(
+          '⚠️  sync({ alter: true }) failed on constraint metadata; falling back to sync().'
+        );
+        console.warn(`   ${syncError.message}`);
+        await db.sequelize.sync();
+      } else {
+        throw syncError;
+      }
+    }
     console.log('✅ Database & tables created!');
 
     // ۳. اجرای سرور

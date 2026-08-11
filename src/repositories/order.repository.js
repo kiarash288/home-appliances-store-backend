@@ -12,6 +12,8 @@ async function findById(orderId, options = {}) {
   return Order.findByPk(orderId, options);
 }
 
+const USER_SAFE_ATTRIBUTES = ['id', 'firstName', 'lastName', 'email', 'phone'];
+
 async function getAll(queryFilters = {}) {
   const where = {};
 
@@ -29,9 +31,52 @@ async function getAll(queryFilters = {}) {
       {
         model: User,
         as: 'user',
+        attributes: USER_SAFE_ATTRIBUTES,
+      },
+      {
+        model: OrderItem,
+        as: 'orderItems',
+        include: [
+          {
+            model: Item,
+            as: 'item',
+            attributes: ['id', 'name', 'main_image'],
+          },
+        ],
       },
     ],
     order: [['createdAt', 'DESC']],
+  });
+}
+
+async function getOrderDetailsById(orderId) {
+  return Order.findOne({
+    where: { id: orderId },
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: USER_SAFE_ATTRIBUTES,
+      },
+      {
+        model: OrderItem,
+        as: 'orderItems',
+        include: [
+          {
+            model: Item,
+            as: 'item',
+          },
+        ],
+      },
+      {
+        model: Address,
+        as: 'address',
+      },
+      {
+        model: Payment,
+        as: 'payments',
+      },
+    ],
   });
 }
 
@@ -103,6 +148,7 @@ module.exports = {
   getAll,
   getUserOrders,
   getOrderWithDetails,
+  getOrderDetailsById,
   updateStatus,
   deleteById,
 };

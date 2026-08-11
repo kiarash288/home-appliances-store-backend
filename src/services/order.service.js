@@ -114,9 +114,45 @@ async function updateOrderStatus(orderId, status) {
   return orderRepository.updateStatus(orderId, status);
 }
 
+// ==================== Admin ====================
+
+async function getAllOrders(filters = {}) {
+  return orderRepository.getAll(filters);
+}
+
+async function getOrderByIdAsAdmin(orderId) {
+  const order = await orderRepository.getOrderDetailsById(orderId);
+  if (!order) {
+    throw new Error('Order not found');
+  }
+  return order;
+}
+
+async function getOrderByTrackingCode(trackingCode) {
+  const orders = await orderRepository.getAll({ tracking_code: trackingCode });
+  if (!orders.length) {
+    throw new Error('Order not found');
+  }
+  return orders[0];
+}
+
+async function deleteOrder(orderId) {
+  const order = await orderRepository.findById(orderId);
+  if (!order) {
+    throw new Error('Order not found');
+  }
+
+  await orderRepository.deleteById(orderId);
+  return { message: 'Order deleted successfully' };
+}
+
 module.exports = {
   createOrder,
   getUserOrders,
   getOrderById,
   updateOrderStatus,
+  getAllOrders,
+  getOrderByIdAsAdmin,
+  getOrderByTrackingCode,
+  deleteOrder,
 };

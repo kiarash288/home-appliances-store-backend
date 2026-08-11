@@ -28,7 +28,7 @@ function formatBasket(basket) {
   };
 }
 
-async function getOrCreateBasket(userId) 
+async function getOrCreateBasket(userId) {
   let basket = await basketRepository.findBasketByUserId(userId);
   if (!basket) {
     basket = await basketRepository.createBasket(userId);
