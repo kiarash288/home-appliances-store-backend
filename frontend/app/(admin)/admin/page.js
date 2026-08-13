@@ -6,6 +6,7 @@ import { ArrowUpRight, Banknote, Package, ShoppingCart, Users } from "lucide-rea
 import api from "@/lib/api";
 import PageHeader from "@/components/admin/PageHeader";
 import StatCard from "@/components/admin/StatCard";
+import SalesChart from "@/components/admin/SalesChart";
 import { Table, TableSkeleton } from "@/components/admin/Table";
 import Badge from "@/components/ui/Badge";
 import {
@@ -19,6 +20,7 @@ const PAID_STATUSES = ["processing", "shipped", "delivered"];
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState(null);
+  const [allOrders, setAllOrders] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,6 +66,7 @@ export default function AdminDashboardPage() {
         totalProducts,
         totalUsers: users.length,
       });
+      setAllOrders(orders);
       setRecentOrders(orders.slice(0, 6));
       setLoading(false);
     });
@@ -113,6 +116,11 @@ export default function AdminDashboardPage() {
           value={loading ? "…" : stats.totalUsers}
           hint="Registered accounts"
         />
+      </div>
+
+      {/* Sales chart with time-range filter */}
+      <div className="mt-8">
+        <SalesChart orders={allOrders} loading={loading} />
       </div>
 
       <div className="mt-8">

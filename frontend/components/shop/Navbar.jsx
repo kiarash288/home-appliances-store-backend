@@ -77,7 +77,7 @@ export default function Navbar() {
   return (
     <>
       <div className="bg-stone-950 py-2 text-center text-[11px] font-medium uppercase tracking-[0.25em] text-stone-300">
-        Free shipping on orders over 5,000,000 Toman
+        Free shipping on orders over $500
       </div>
 
       <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-stone-50/85 backdrop-blur-xl">

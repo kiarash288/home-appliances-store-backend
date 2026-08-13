@@ -330,10 +330,11 @@ export default function AdminProductsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               id="product-price"
-              label="Price (Toman)"
+              label="Price ($)"
               type="number"
-              min="1"
-              placeholder="1299000"
+              min="0.01"
+              step="0.01"
+              placeholder="129.99"
               value={form.price}
               onChange={update("price")}
               required

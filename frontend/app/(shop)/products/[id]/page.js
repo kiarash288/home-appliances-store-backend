@@ -272,7 +272,7 @@ export default function ProductDetailPage() {
           <div className="mt-10 space-y-3 border-t border-stone-200 pt-6 text-sm text-stone-500">
             <p className="flex items-center gap-2.5">
               <Truck size={16} className="text-stone-400" />
-              Free shipping on orders over 5,000,000 Toman
+              Free shipping on orders over $500
             </p>
             <p className="flex items-center gap-2.5">
               <ShieldCheck size={16} className="text-stone-400" />

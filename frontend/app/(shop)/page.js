@@ -17,8 +17,32 @@ import { useMounted } from "@/lib/hooks";
 import ProductCard, {
   gridVariants,
 } from "@/components/shop/ProductCard";
-import ProductImage from "@/components/shop/ProductImage";
 import Skeleton from "@/components/ui/Skeleton";
+
+// Curated product photography for the hero mosaic. Each entry has a picsum
+// fallback in case the primary CDN is unreachable.
+const HERO_IMAGES = [
+  {
+    src: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
+    fallback: "https://picsum.photos/seed/shop1/800/1000",
+    alt: "Premium wireless headphones on a warm background",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80",
+    fallback: "https://picsum.photos/seed/shop2/800/1000",
+    alt: "Minimal analog watch product shot",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
+    fallback: "https://picsum.photos/seed/shop3/800/1000",
+    alt: "Red sneaker floating on a colorful backdrop",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+    fallback: "https://picsum.photos/seed/shop4/800/1000",
+    alt: "Minimal backpack against a soft background",
+  },
+];
 
 const VALUE_PROPS = [
   {
@@ -147,32 +171,36 @@ export default function HomePage() {
           className="relative hidden lg:block"
         >
           <div className="grid grid-cols-2 gap-4">
-            {(featured.length >= 4 ? featured.slice(0, 4) : [null, null, null, null]).map(
-              (product, index) => (
-                <motion.div
-                  key={product?.id ?? index}
-                  animate={{ y: [0, index % 2 === 0 ? -8 : 8, 0] }}
-                  transition={{
-                    duration: 6 + index,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className={
-                    index % 2 === 0
-                      ? "aspect-[4/5] overflow-hidden rounded-3xl shadow-sm"
-                      : "mt-10 aspect-[4/5] overflow-hidden rounded-3xl shadow-sm"
-                  }
-                >
-                  {product ? (
-                    <Link href={`/products/${product.id}`}>
-                      <ProductImage product={product} letterSize={56} />
-                    </Link>
-                  ) : (
-                    <div className="skeleton h-full w-full" />
-                  )}
-                </motion.div>
-              )
-            )}
+            {HERO_IMAGES.map((image, index) => (
+              <motion.div
+                key={image.src}
+                animate={{ y: [0, index % 2 === 0 ? -8 : 8, 0] }}
+                transition={{
+                  duration: 6 + index,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className={
+                  index % 2 === 0
+                    ? "aspect-[4/5] overflow-hidden rounded-3xl shadow-sm"
+                    : "mt-10 aspect-[4/5] overflow-hidden rounded-3xl shadow-sm"
+                }
+              >
+                <Link href="/products" className="block h-full w-full">
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    loading={index < 2 ? "eager" : "lazy"}
+                    onError={(event) => {
+                      if (event.currentTarget.src !== image.fallback) {
+                        event.currentTarget.src = image.fallback;
+                      }
+                    }}
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  />
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </section>

@@ -5,9 +5,13 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+const USD_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
 export function formatPrice(value) {
-  const amount = Number(value || 0);
-  return `${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })} Toman`;
+  return USD_FORMATTER.format(Number(value || 0));
 }
 
 export function formatDate(value) {
