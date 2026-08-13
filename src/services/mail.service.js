@@ -1,6 +1,34 @@
 const transporter = require('../config/mail');
 
 /**
+ * Logs the exact underlying SMTP failure so the root cause is visible in the
+ * server console (auth vs network vs TLS), then lets the caller map it to a
+ * user-facing error.
+ */
+function logSmtpError(context, error) {
+  console.error(`❌ ${context}`);
+  console.error(`   code: ${error.code || 'n/a'}`);
+  console.error(`   responseCode: ${error.responseCode || 'n/a'}`);
+  console.error(`   command: ${error.command || 'n/a'}`);
+  if (error.response) {
+    console.error(`   smtp response: ${error.response}`);
+  }
+  console.error(`   message: ${error.message}`);
+
+  if (error.code === 'EAUTH' || error.responseCode === 535) {
+    console.error(
+      '   hint: SMTP login rejected — verify the Gmail App Password and SMTP_USER.'
+    );
+  } else if (
+    ['ETIMEDOUT', 'ECONNECTION', 'ESOCKET', 'ECONNREFUSED'].includes(error.code)
+  ) {
+    console.error(
+      '   hint: SMTP server unreachable — the network may block SMTP. Try SMTP_PORT=465 or another network/VPN.'
+    );
+  }
+}
+
+/**
  * Sends a one-time verification code to the given email address.
  * @param {string} toEmail
  * @param {string} otpCode
@@ -22,9 +50,11 @@ async function sendOtpEmail(toEmail, otpCode) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 OTP email sent to ${toEmail} (id: ${info.messageId})`);
+    return info;
   } catch (error) {
-    console.error('Failed to send OTP email:', error);
+    logSmtpError(`Failed to send OTP email to ${toEmail}`, error);
     throw new Error('Failed to send verification email');
   }
 }
@@ -60,9 +90,13 @@ async function sendVerificationLink(email, token) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `📧 Verification link sent to ${email} (id: ${info.messageId})`
+    );
+    return info;
   } catch (error) {
-    console.error('Failed to send verification link email:', error);
+    logSmtpError(`Failed to send verification link to ${email}`, error);
     throw new Error('Failed to send verification email');
   }
 }

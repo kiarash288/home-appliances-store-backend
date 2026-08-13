@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ImagePlus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import api, { getErrorMessage } from "@/lib/api";
+import api, { assetUrl, getErrorMessage } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks";
 import PageHeader from "@/components/admin/PageHeader";
 import { Table, TableSkeleton } from "@/components/admin/Table";
@@ -41,6 +41,8 @@ export default function AdminProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [mainImageFile, setMainImageFile] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
   const [saving, setSaving] = useState(false);
 
   const [deleting, setDeleting] = useState(null);
@@ -79,6 +81,8 @@ export default function AdminProductsPage() {
   const openCreate = () => {
     setEditing(null);
     setForm(EMPTY_FORM);
+    setMainImageFile(null);
+    setGalleryFiles([]);
     setModalOpen(true);
   };
 
@@ -91,28 +95,51 @@ export default function AdminProductsPage() {
       stock: String(product.stock ?? ""),
       categoryId: String(product.category_id ?? product.category?.id ?? ""),
     });
+    setMainImageFile(null);
+    setGalleryFiles([]);
     setModalOpen(true);
   };
 
   const update = (key) => (event) =>
     setForm((prev) => ({ ...prev, [key]: event.target.value }));
 
+  const handleGallerySelect = (event) => {
+    const selected = Array.from(event.target.files || []);
+    if (!selected.length) return;
+    setGalleryFiles((prev) => {
+      const merged = [...prev, ...selected].slice(0, 5);
+      if (prev.length + selected.length > 5) {
+        toast.info("Gallery is limited to 5 images");
+      }
+      return merged;
+    });
+    // Allow re-selecting the same file after removal
+    event.target.value = "";
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
     setSaving(true);
     try {
-      const payload = {
-        name: form.name,
-        description: form.description,
-        price: Number(form.price),
-        stock: Number(form.stock),
-        categoryId: Number(form.categoryId),
-      };
+      // Multipart request: text fields + image files in a single payload
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("description", form.description);
+      formData.append("price", form.price);
+      formData.append("stock", form.stock);
+      formData.append("categoryId", form.categoryId);
+      if (mainImageFile) {
+        formData.append("mainImage", mainImageFile);
+      }
+      galleryFiles.forEach((file) => {
+        formData.append("galleryImages", file);
+      });
+
       if (editing) {
-        await api.put(`/items/${editing.id}`, payload);
+        await api.put(`/items/${editing.id}`, formData);
         toast.success("Product updated");
       } else {
-        await api.post("/items", payload);
+        await api.post("/items", formData);
         toast.success("Product created");
       }
       setModalOpen(false);
@@ -137,6 +164,27 @@ export default function AdminProductsPage() {
       setDeleteBusy(false);
     }
   };
+
+  const mainImagePreview = useMemo(
+    () => (mainImageFile ? URL.createObjectURL(mainImageFile) : null),
+    [mainImageFile]
+  );
+
+  const galleryPreviews = useMemo(
+    () => galleryFiles.map((file) => URL.createObjectURL(file)),
+    [galleryFiles]
+  );
+
+  const existingGallery = useMemo(() => {
+    if (!editing?.gallery) return [];
+    if (Array.isArray(editing.gallery)) return editing.gallery;
+    try {
+      const parsed = JSON.parse(editing.gallery);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [editing]);
 
   return (
     <div>
@@ -311,6 +359,133 @@ export default function AdminProductsPage() {
             rows={4}
             required
           />
+
+          {/* ---------- Main image (exactly 1) ---------- */}
+          <div className="space-y-1.5">
+            <p className="block text-xs font-medium uppercase tracking-wide text-stone-500">
+              Main image
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-stone-200 bg-stone-50">
+                {mainImagePreview ? (
+                  <>
+                    <img
+                      src={mainImagePreview}
+                      alt="Main preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMainImageFile(null)}
+                      aria-label="Remove selected main image"
+                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-stone-950/70 text-white transition hover:bg-red-600"
+                    >
+                      <X size={11} />
+                    </button>
+                  </>
+                ) : editing?.main_image ? (
+                  <img
+                    src={assetUrl(editing.main_image)}
+                    alt="Current main"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-stone-300">
+                    <ImagePlus size={22} strokeWidth={1.5} />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-full border border-stone-200 bg-white px-4 text-xs font-medium text-stone-700 transition hover:border-stone-400">
+                  <ImagePlus size={14} />
+                  {mainImagePreview || editing?.main_image
+                    ? "Replace main image"
+                    : "Choose main image"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) setMainImageFile(file);
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                <p className="text-xs text-stone-400">
+                  1 image · jpeg/png/webp · max 5MB
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ---------- Gallery images (up to 5) ---------- */}
+          <div className="space-y-1.5">
+            <p className="block text-xs font-medium uppercase tracking-wide text-stone-500">
+              Gallery images
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {galleryPreviews.map((preview, index) => (
+                <div
+                  key={preview}
+                  className="relative h-20 w-20 overflow-hidden rounded-xl border border-stone-200"
+                >
+                  <img
+                    src={preview}
+                    alt={`Gallery ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setGalleryFiles((prev) =>
+                        prev.filter((_, i) => i !== index)
+                      )
+                    }
+                    aria-label="Remove gallery image"
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-stone-950/70 text-white transition hover:bg-red-600"
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+
+              {galleryFiles.length === 0 &&
+                existingGallery.map((image) => (
+                  <div
+                    key={image}
+                    className="h-20 w-20 overflow-hidden rounded-xl border border-stone-200 opacity-70"
+                  >
+                    <img
+                      src={assetUrl(image)}
+                      alt="Current gallery"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ))}
+
+              {galleryFiles.length < 5 && (
+                <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-stone-300 text-stone-400 transition hover:border-stone-500 hover:text-stone-600">
+                  <ImagePlus size={18} strokeWidth={1.5} />
+                  <span className="text-[10px] font-medium">Add</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={handleGallerySelect}
+                  />
+                </label>
+              )}
+            </div>
+            <p className="text-xs text-stone-400">
+              Up to 5 images.
+              {editing && existingGallery.length > 0
+                ? " Selecting new files replaces the current gallery."
+                : ""}
+            </p>
+          </div>
+
           <div className="flex justify-end gap-3 pt-1">
             <Button
               type="button"

@@ -10,6 +10,8 @@
  *   router.get('/:id', validateParams(createParamIdSchema('id')), controller);
  */
 
+const { cleanupUploadedFiles } = require('./upload.middleware');
+
 function formatZodErrors(error) {
   return error.issues.map((issue) => ({
     field: issue.path.join('.') || 'value',
@@ -20,13 +22,17 @@ function formatZodErrors(error) {
 /**
  * Higher-order middleware that validates req.body against a Zod schema.
  *
+ * When validation fails on a multipart request, any files multer already
+ * saved to disk are deleted before responding, so no orphan files remain.
+ *
  * @param {import('zod').ZodSchema} schema - Zod schema to validate against
  */
 const validate = (schema) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
+      await cleanupUploadedFiles(req);
       return res.status(400).json({
         message: 'Validation failed',
         errors: formatZodErrors(result.error),
@@ -44,10 +50,11 @@ const validate = (schema) => {
  * @param {import('zod').ZodSchema} schema - Zod schema to validate against
  */
 const validateParams = (schema) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     const result = schema.safeParse(req.params);
 
     if (!result.success) {
+      await cleanupUploadedFiles(req);
       return res.status(400).json({
         message: 'Validation failed',
         errors: formatZodErrors(result.error),

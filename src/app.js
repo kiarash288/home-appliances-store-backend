@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -12,6 +13,9 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Uploaded assets (product images) — public, no auth required
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // OpenAPI docs — after basic middleware, before API routes
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

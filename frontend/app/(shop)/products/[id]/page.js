@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronRight,
   PackageX,
@@ -13,7 +13,8 @@ import {
   Truck,
 } from "lucide-react";
 import { toast } from "sonner";
-import api from "@/lib/api";
+import api, { assetUrl } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import ProductImage from "@/components/shop/ProductImage";
@@ -38,11 +39,29 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  // Main image first, then gallery images (gallery may arrive as JSON string)
+  const images = useMemo(() => {
+    if (!product) return [];
+    let gallery = product.gallery || [];
+    if (typeof gallery === "string") {
+      try {
+        gallery = JSON.parse(gallery);
+      } catch {
+        gallery = [];
+      }
+    }
+    return [product.main_image, ...(Array.isArray(gallery) ? gallery : [])]
+      .filter(Boolean)
+      .map(assetUrl);
+  }, [product]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setNotFound(false);
+    setActiveImageIndex(0);
 
     api
       .get(`/items/${id}`)
@@ -127,19 +146,61 @@ export default function ProductDetailPage() {
       </nav>
 
       <div className="grid gap-12 lg:grid-cols-2">
-        {/* Image */}
+        {/* Images */}
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="relative aspect-square overflow-hidden rounded-3xl bg-stone-100"
+          className="space-y-3"
         >
-          <ProductImage product={product} letterSize={110} />
-          <FavoriteButton
-            product={product}
-            className="absolute right-4 top-4 h-11 w-11"
-            size={20}
-          />
+          <div className="relative aspect-square overflow-hidden rounded-3xl bg-stone-100">
+            {images.length > 0 ? (
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={images[activeImageIndex] || images[0]}
+                  src={images[activeImageIndex] || images[0]}
+                  alt={product.name}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="h-full w-full object-cover"
+                />
+              </AnimatePresence>
+            ) : (
+              <ProductImage product={product} letterSize={110} />
+            )}
+            <FavoriteButton
+              product={product}
+              className="absolute right-4 top-4 h-11 w-11"
+              size={20}
+            />
+          </div>
+
+          {images.length > 1 && (
+            <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
+              {images.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  onClick={() => setActiveImageIndex(index)}
+                  aria-label={`View image ${index + 1}`}
+                  className={cn(
+                    "h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition",
+                    index === activeImageIndex
+                      ? "border-stone-900"
+                      : "border-transparent opacity-70 hover:opacity-100"
+                  )}
+                >
+                  <img
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Info */}

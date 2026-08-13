@@ -9,6 +9,7 @@ const {
   createItemSchema,
   updateItemSchema,
 } = require('../validators/item.validator');
+const { uploadProductImages } = require('../middlewares/upload.middleware');
 const itemController = require('../controllers/item.controller');
 
 // ==================== Public Routes ====================
@@ -53,12 +54,13 @@ const itemController = require('../controllers/item.controller');
  *   post:
  *     tags: [Products]
  *     summary: Create a product (admin)
+ *     description: Accepts multipart/form-data with one `mainImage` file and up to 5 `galleryImages` files.
  *     security:
  *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required: [name, description, price, stock, categoryId]
@@ -77,6 +79,16 @@ const itemController = require('../controllers/item.controller');
  *               categoryId:
  *                 type: integer
  *                 example: 2
+ *               mainImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Main product image (1 file, jpeg/png/webp, max 5MB)
+ *               galleryImages:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Secondary gallery images (up to 5 files)
  *     responses:
  *       201:
  *         description: Product created
@@ -84,6 +96,8 @@ const itemController = require('../controllers/item.controller');
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: Validation or upload error
  *       401:
  *         description: Unauthorized
  *       403:
@@ -94,6 +108,7 @@ router.post(
   '/',
   verifyToken,
   isAdmin,
+  uploadProductImages,
   validate(createItemSchema),
   itemController.create
 );
@@ -199,6 +214,7 @@ router.put(
   verifyToken,
   isAdmin,
   validateParams(createParamIdSchema('id')),
+  uploadProductImages,
   validate(updateItemSchema),
   itemController.update
 );

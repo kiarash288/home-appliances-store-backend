@@ -34,6 +34,10 @@ async function startServer() {
     app.listen(port, () => {
       console.log(`🚀 Server running on port ${port} (${process.env.NODE_ENV || 'development'})`);
     });
+
+    // ۴. تست اتصال SMTP (غیر مسدودکننده) — نتیجه و علت خطا در کنسول چاپ می‌شود
+    const { verifyMailConnection } = require('./config/mail');
+    verifyMailConnection();
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
     process.exit(1);

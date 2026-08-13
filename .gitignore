@@ -24,6 +24,9 @@ coverage/
 dist/
 build/
 
+# Uploaded files (user content)
+public/uploads/
+
 # OS files
 .DS_Store
 Thumbs.db

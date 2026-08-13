@@ -3,6 +3,16 @@ import axios from "axios";
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
+// Backend origin for static assets (uploaded images live at /uploads/...)
+export const ASSET_URL = API_URL.replace(/\/api\/?$/, "");
+
+/** Resolves a stored image path (e.g. /uploads/items/x.jpg) to a full URL. */
+export function assetUrl(path) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${ASSET_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,

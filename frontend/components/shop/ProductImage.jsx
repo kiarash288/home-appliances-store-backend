@@ -1,5 +1,6 @@
 "use client";
 
+import { assetUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const PALETTES = [
@@ -21,7 +22,7 @@ export default function ProductImage({ product, className, letterSize = 44 }) {
   if (product?.main_image) {
     return (
       <img
-        src={product.main_image}
+        src={assetUrl(product.main_image)}
         alt={product?.name || "Product"}
         className={cn("h-full w-full object-cover", className)}
       />
