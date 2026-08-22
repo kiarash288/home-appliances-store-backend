@@ -1,112 +1,40 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  ChevronRight,
-  PackageX,
-  RefreshCcw,
-  ShieldCheck,
-  ShoppingBag,
-  Truck,
-} from "lucide-react";
-import { toast } from "sonner";
-import api, { assetUrl } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/store/auth";
-import { useCartStore } from "@/store/cart";
-import ProductImage from "@/components/shop/ProductImage";
-import FavoriteButton from "@/components/shop/FavoriteButton";
-import QuantityStepper from "@/components/shop/QuantityStepper";
-import ReviewsSection, { Stars } from "@/components/shop/ReviewsSection";
-import Button from "@/components/ui/Button";
-import Badge from "@/components/ui/Badge";
-import Skeleton from "@/components/ui/Skeleton";
-import EmptyState from "@/components/ui/EmptyState";
+import { notFound } from "next/navigation";
+import { ChevronRight, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
+import { fetchFromApi } from "@/lib/server-api";
 import { formatPrice } from "@/lib/utils";
+import ProductGallery from "@/components/shop/ProductGallery";
+import PurchasePanel from "@/components/shop/PurchasePanel";
+import ReviewsSection, { Stars } from "@/components/shop/ReviewsSection";
+import Badge from "@/components/ui/Badge";
 
-export default function ProductDetailPage() {
-  const { id } = useParams();
-  const router = useRouter();
-
-  const user = useAuthStore((state) => state.user);
-  const addItem = useCartStore((state) => state.addItem);
-  const mutatingId = useCartStore((state) => state.mutatingId);
-
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-
-  // Main image first, then gallery images (gallery may arrive as JSON string)
-  const images = useMemo(() => {
-    if (!product) return [];
-    let gallery = product.gallery || [];
-    if (typeof gallery === "string") {
-      try {
-        gallery = JSON.parse(gallery);
-      } catch {
-        gallery = [];
-      }
-    }
-    return [product.main_image, ...(Array.isArray(gallery) ? gallery : [])]
-      .filter(Boolean)
-      .map(assetUrl);
-  }, [product]);
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setNotFound(false);
-    setActiveImageIndex(0);
-
-    api
-      .get(`/items/${id}`)
-      .then(({ data }) => {
-        if (active) setProduct(data);
-      })
-      .catch(() => {
-        if (active) setNotFound(true);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [id]);
-
-  const handleAddToCart = () => {
-    if (!user) {
-      toast("Please sign in to start shopping");
-      router.push(`/login?next=/products/${id}`);
-      return;
-    }
-    addItem(product.id, quantity);
-  };
-
-  if (loading) {
-    return <DetailSkeleton />;
+/** SEO: per-product title + description generated on the server. */
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const product = await fetchFromApi(`/items/${id}`);
+  if (!product) {
+    return { title: "Product not found" };
   }
+  return {
+    title: product.name,
+    description: (product.description || `Buy ${product.name} at STORE.`)
+      .replace(/\s+/g, " ")
+      .slice(0, 160),
+  };
+}
 
-  if (notFound || !product) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-24">
-        <EmptyState
-          icon={PackageX}
-          title="Product not found"
-          description="It may have been removed or is temporarily unavailable."
-        >
-          <Button onClick={() => router.push("/products")}>
-            Back to shop
-          </Button>
-        </EmptyState>
-      </div>
-    );
+/**
+ * Server Component: product data is fetched on the server and rendered into
+ * the initial HTML. Interactivity is isolated into ProductGallery (image
+ * switcher + favorite), PurchasePanel (quantity + add to cart) and
+ * ReviewsSection (list + submit form).
+ */
+export default async function ProductDetailPage({ params }) {
+  const { id } = await params;
+  const product = await fetchFromApi(`/items/${id}`);
+
+  if (!product) {
+    notFound();
   }
 
   const approvedReviews = (product.reviews || []).filter(
@@ -121,11 +49,10 @@ export default function ProductDetailPage() {
       : null;
 
   const outOfStock = Number(product.stock) <= 0;
-  const adding = mutatingId === product.id;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs (server-rendered, crawlable) */}
       <nav className="mb-8 flex items-center gap-1.5 text-xs text-stone-400">
         <Link href="/products" className="transition hover:text-stone-900">
           Shop
@@ -146,70 +73,11 @@ export default function ProductDetailPage() {
       </nav>
 
       <div className="grid gap-12 lg:grid-cols-2">
-        {/* Images */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="space-y-3"
-        >
-          <div className="relative aspect-square overflow-hidden rounded-3xl bg-stone-100">
-            {images.length > 0 ? (
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={images[activeImageIndex] || images[0]}
-                  src={images[activeImageIndex] || images[0]}
-                  alt={product.name}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="h-full w-full object-cover"
-                />
-              </AnimatePresence>
-            ) : (
-              <ProductImage product={product} letterSize={110} />
-            )}
-            <FavoriteButton
-              product={product}
-              className="absolute right-4 top-4 h-11 w-11"
-              size={20}
-            />
-          </div>
+        {/* Images (client island) */}
+        <ProductGallery product={product} />
 
-          {images.length > 1 && (
-            <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
-              {images.map((image, index) => (
-                <button
-                  key={image}
-                  type="button"
-                  onClick={() => setActiveImageIndex(index)}
-                  aria-label={`View image ${index + 1}`}
-                  className={cn(
-                    "h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition",
-                    index === activeImageIndex
-                      ? "border-stone-900"
-                      : "border-transparent opacity-70 hover:opacity-100"
-                  )}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="flex flex-col"
-        >
+        {/* Info (server-rendered) */}
+        <div className="flex flex-col">
           {product.category?.name && (
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
               {product.category.name}
@@ -249,25 +117,8 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <QuantityStepper
-              value={quantity}
-              onChange={setQuantity}
-              min={1}
-              max={Math.max(Number(product.stock) || 1, 1)}
-              disabled={outOfStock}
-            />
-            <Button
-              size="lg"
-              className="flex-1 sm:flex-none sm:px-10"
-              disabled={outOfStock}
-              loading={adding}
-              onClick={handleAddToCart}
-            >
-              <ShoppingBag size={16} />
-              {outOfStock ? "Sold out" : "Add to cart"}
-            </Button>
-          </div>
+          {/* Quantity + add to cart (client island) */}
+          <PurchasePanel product={product} />
 
           <div className="mt-10 space-y-3 border-t border-stone-200 pt-6 text-sm text-stone-500">
             <p className="flex items-center gap-2.5">
@@ -283,28 +134,11 @@ export default function ProductDetailPage() {
               7-day hassle-free returns
             </p>
           </div>
-        </motion.div>
-      </div>
-
-      <ReviewsSection itemId={id} />
-    </div>
-  );
-}
-
-function DetailSkeleton() {
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <Skeleton className="h-4 w-52" />
-      <div className="mt-8 grid gap-12 lg:grid-cols-2">
-        <Skeleton className="aspect-square w-full rounded-3xl" />
-        <div className="space-y-4">
-          <Skeleton className="h-3.5 w-24" />
-          <Skeleton className="h-10 w-3/4" />
-          <Skeleton className="h-7 w-40" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-12 w-64 rounded-full" />
         </div>
       </div>
+
+      {/* Reviews stay dynamic (client island) */}
+      <ReviewsSection itemId={product.id} />
     </div>
   );
 }

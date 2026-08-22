@@ -1,8 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -11,38 +7,16 @@ import {
   Sparkles,
   Truck,
 } from "lucide-react";
-import api from "@/lib/api";
-import { useAuthStore } from "@/store/auth";
-import { useMounted } from "@/lib/hooks";
-import ProductCard, {
-  gridVariants,
-} from "@/components/shop/ProductCard";
-import Skeleton from "@/components/ui/Skeleton";
+import { fetchFromApi } from "@/lib/server-api";
+import Reveal from "@/components/home/Reveal";
+import HeroShowcase from "@/components/home/HeroShowcase";
+import FeaturedGrid from "@/components/home/FeaturedGrid";
+import MembersCta from "@/components/home/MembersCta";
 
-// Curated product photography for the hero mosaic. Each entry has a picsum
-// fallback in case the primary CDN is unreachable.
-const HERO_IMAGES = [
-  {
-    src: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
-    fallback: "https://picsum.photos/seed/shop1/800/1000",
-    alt: "Premium wireless headphones on a warm background",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80",
-    fallback: "https://picsum.photos/seed/shop2/800/1000",
-    alt: "Minimal analog watch product shot",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
-    fallback: "https://picsum.photos/seed/shop3/800/1000",
-    alt: "Red sneaker floating on a colorful backdrop",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
-    fallback: "https://picsum.photos/seed/shop4/800/1000",
-    alt: "Minimal backpack against a soft background",
-  },
-];
+export const metadata = {
+  description:
+    "Discover quality products at honest prices — from daily basics to statement pieces. Fast delivery and secure checkout.",
+};
 
 const VALUE_PROPS = [
   {
@@ -62,158 +36,75 @@ const VALUE_PROPS = [
   },
 ];
 
-export default function HomePage() {
-  const mounted = useMounted();
-  const user = useAuthStore((state) => state.user);
+/**
+ * Server Component: data is fetched on the server and rendered into the
+ * initial HTML for SEO. Animations and auth-aware UI live in small client
+ * islands (Reveal, HeroShowcase, FeaturedGrid, MembersCta).
+ */
+export default async function HomePage() {
+  const [itemsResult, categoriesResult] = await Promise.all([
+    fetchFromApi("/items?limit=8"),
+    fetchFromApi("/categories"),
+  ]);
 
-  const [featured, setFeatured] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    Promise.allSettled([
-      api.get("/items", { params: { limit: 8 } }),
-      api.get("/categories"),
-    ]).then(([itemsResult, categoriesResult]) => {
-      if (!active) return;
-      if (itemsResult.status === "fulfilled") {
-        setFeatured(itemsResult.value.data.items || []);
-      }
-      if (categoriesResult.status === "fulfilled") {
-        setCategories(
-          Array.isArray(categoriesResult.value.data)
-            ? categoriesResult.value.data
-            : []
-        );
-      }
-      setLoading(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const featured = itemsResult?.items || [];
+  const categories = Array.isArray(categoriesResult) ? categoriesResult : [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* ============ Hero ============ */}
       <section className="grid items-center gap-12 py-16 lg:grid-cols-2 lg:py-24">
-        <motion.div
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: {},
-            show: { transition: { staggerChildren: 0.12 } },
-          }}
-          className="space-y-7"
-        >
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: 16 },
-              show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-            }}
-            className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-1.5 text-xs font-medium text-stone-600"
-          >
-            <Sparkles size={13} className="text-emerald-600" />
-            New season, fresh arrivals
-          </motion.div>
+        <div className="space-y-7">
+          <Reveal delay={0}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-1.5 text-xs font-medium text-stone-600">
+              <Sparkles size={13} className="text-emerald-600" />
+              New season, fresh arrivals
+            </div>
+          </Reveal>
 
-          <motion.h1
-            variants={{
-              hidden: { opacity: 0, y: 16 },
-              show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-            }}
-            className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl"
-          >
-            Everyday essentials,
-            <br />
-            <span className="text-stone-400">thoughtfully curated.</span>
-          </motion.h1>
+          <Reveal delay={0.1}>
+            <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+              Everyday essentials,
+              <br />
+              <span className="text-stone-400">thoughtfully curated.</span>
+            </h1>
+          </Reveal>
 
-          <motion.p
-            variants={{
-              hidden: { opacity: 0, y: 16 },
-              show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-            }}
-            className="max-w-md text-base leading-relaxed text-stone-500"
-          >
-            Discover quality products at honest prices — from daily basics to
-            statement pieces, all in one place.
-          </motion.p>
+          <Reveal delay={0.2}>
+            <p className="max-w-md text-base leading-relaxed text-stone-500">
+              Discover quality products at honest prices — from daily basics to
+              statement pieces, all in one place.
+            </p>
+          </Reveal>
 
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: 16 },
-              show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-            }}
-            className="flex flex-wrap items-center gap-3"
-          >
-            <Link
-              href="/products"
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-stone-900 px-7 text-sm font-medium text-white transition hover:bg-stone-700"
-            >
-              Shop now <ArrowRight size={16} />
-            </Link>
-            <Link
-              href="/products"
-              className="inline-flex h-12 items-center rounded-full border border-stone-300 bg-white px-7 text-sm font-medium text-stone-900 transition hover:border-stone-900"
-            >
-              Browse categories
-            </Link>
-          </motion.div>
-        </motion.div>
-
-        {/* Hero art */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative hidden lg:block"
-        >
-          <div className="grid grid-cols-2 gap-4">
-            {HERO_IMAGES.map((image, index) => (
-              <motion.div
-                key={image.src}
-                animate={{ y: [0, index % 2 === 0 ? -8 : 8, 0] }}
-                transition={{
-                  duration: 6 + index,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className={
-                  index % 2 === 0
-                    ? "aspect-[4/5] overflow-hidden rounded-3xl shadow-sm"
-                    : "mt-10 aspect-[4/5] overflow-hidden rounded-3xl shadow-sm"
-                }
+          <Reveal delay={0.3}>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/products"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-stone-900 px-7 text-sm font-medium text-white transition hover:bg-stone-700"
               >
-                <Link href="/products" className="block h-full w-full">
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                    loading={index < 2 ? "eager" : "lazy"}
-                    onError={(event) => {
-                      if (event.currentTarget.src !== image.fallback) {
-                        event.currentTarget.src = image.fallback;
-                      }
-                    }}
-                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-                  />
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+                Shop now <ArrowRight size={16} />
+              </Link>
+              <Link
+                href="/products"
+                className="inline-flex h-12 items-center rounded-full border border-stone-300 bg-white px-7 text-sm font-medium text-stone-900 transition hover:border-stone-900"
+              >
+                Browse categories
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+
+        <HeroShowcase />
       </section>
 
       {/* ============ Value props ============ */}
       <section className="grid gap-4 border-y border-stone-200 py-10 sm:grid-cols-3">
         {VALUE_PROPS.map((prop, index) => (
-          <motion.div
+          <Reveal
             key={prop.title}
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.08, duration: 0.4 }}
+            viewport
+            delay={index * 0.08}
             className="flex items-start gap-4 px-2"
           >
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-stone-700">
@@ -225,7 +116,7 @@ export default function HomePage() {
                 {prop.description}
               </p>
             </div>
-          </motion.div>
+          </Reveal>
         ))}
       </section>
 
@@ -244,13 +135,7 @@ export default function HomePage() {
           </div>
           <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
             {categories.map((category, index) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05, duration: 0.35 }}
-              >
+              <Reveal key={category.id} viewport delay={index * 0.05}>
                 <Link
                   href={`/products?category=${category.id}`}
                   className="group flex min-w-44 flex-col justify-between gap-8 rounded-3xl border border-stone-200 bg-white px-6 py-7 transition-colors hover:border-stone-900"
@@ -266,7 +151,7 @@ export default function HomePage() {
                     </p>
                   </div>
                 </Link>
-              </motion.div>
+              </Reveal>
             ))}
           </div>
         </section>
@@ -291,59 +176,11 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-2 gap-x-5 gap-y-9 sm:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="space-y-3">
-                <Skeleton className="aspect-[4/5] w-full rounded-2xl" />
-                <Skeleton className="h-3.5 w-2/3" />
-                <Skeleton className="h-3.5 w-1/3" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <motion.div
-            variants={gridVariants}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-2 gap-x-5 gap-y-9 sm:grid-cols-3 lg:grid-cols-4"
-          >
-            {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </motion.div>
-        )}
+        <FeaturedGrid products={featured} />
       </section>
 
-      {/* ============ CTA banner ============ */}
-      {(!mounted || !user) && (
-        <section className="pb-24 pt-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-stone-950 p-10 text-white sm:flex-row sm:items-center lg:p-14"
-          >
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Members get more.
-              </h2>
-              <p className="mt-2 max-w-md text-sm text-stone-400">
-                Create an account to track orders, save favorites and check out
-                faster.
-              </p>
-            </div>
-            <Link
-              href="/register"
-              className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-7 text-sm font-medium text-white transition hover:bg-emerald-500"
-            >
-              Create account <ArrowRight size={16} />
-            </Link>
-          </motion.div>
-        </section>
-      )}
+      {/* ============ CTA banner (hides itself for signed-in users) ============ */}
+      <MembersCta />
     </div>
   );
 }

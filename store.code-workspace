@@ -2,9 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../node-prj/nodeEx-385-debug-last-word"
 		}
 	]
 }
